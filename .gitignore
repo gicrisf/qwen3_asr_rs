@@ -25,7 +25,7 @@ Qwen3-ASR-0.6B/
 libtorch
 
 # Test audio files
-*.wav
+# *.wav
 *.mp3
 *.flac
 *.m4a

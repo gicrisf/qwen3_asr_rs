@@ -144,11 +144,59 @@ sudo apt-get install -y nasm pkg-config
 cargo build --release --features build-ffmpeg
 ```
 
+## Benchmarking
+
+A dedicated `bench` binary loads the model once and runs inference N times,
+reporting min/mean/max wall time and real-time factor. Audio loading and mel
+spectrogram computation are included in each measurement but are negligible
+(<50 ms) relative to total inference time (~5–6 s).
+
+### Build
+
+```bash
+# Linux (libtorch CPU)
+export LIBTORCH=$(pwd)/libtorch
+export LIBTORCH_BYPASS_VERSION_CHECK=1
+cargo build --release --bin bench --features build-ffmpeg
+```
+
+### Run
+
+A sample audio file (`jfk.wav`, ~11 s) is included in the repository to reproduce the reference:
+
+```bash
+LD_LIBRARY_PATH=libtorch/lib LIBTORCH_BYPASS_VERSION_CHECK=1 \
+  ./target/release/bench ./Qwen3-ASR-0.6B jfk.wav -n 10
+```
+
+Example output:
+
+```
+system_info: n_cpus = 12
+
+Loading model from ./Qwen3-ASR-0.6B ... done
+
+Mode: full pipeline  |  10 run(s)  |  11.0 s  [jfk.wav]
+
+  warmup ... done
+  run 1/10:  total=  5995 ms  rt=0.55x  words=22
+  ...
+
+                     min      mean       max
+total             5995.0    6017.8    6040.0  ms
+rt_factor           0.55      0.55      0.55  x RT
+```
+
+For end-to-end wall time (including model load), libtorch takes ~5 s longer
+due to weight deserialization vs. candle's mmap-based loading.
+
 ## Project Structure
 
 ```
 src/
 ├── main.rs            # CLI binary entry point
+├── bin/
+│   └── bench.rs       # Benchmark binary (load once, run N times)
 ├── lib.rs             # Library module declarations
 ├── tensor.rs          # Unified Tensor abstraction (tch/MLX backend)
 ├── config.rs          # Model configuration (from config.json)

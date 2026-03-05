@@ -9,6 +9,10 @@ license = "Apache-2.0"
 name = "asr"
 path = "src/main.rs"
 
+[[bin]]
+name = "bench"
+path = "src/bin/bench.rs"
+
 [dependencies]
 tch = { version = "0.20", optional = true }
 tokenizers = "0.21"
